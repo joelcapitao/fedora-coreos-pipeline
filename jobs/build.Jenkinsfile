@@ -185,7 +185,7 @@ lock(resource: "build-${params.STREAM}") {
         def s3_stream_dir
 
         if (pipecfg.s3 && pipeutils.AWSBuildUploadCredentialExists()) {
-            s3_stream_dir = pipeutils.get_s3_streams_dir(pipecfg, params.STREAM)
+            s3_stream_dir = ""
         }
 
         // Now, determine if we should do any uploads to remote s3 buckets or clouds

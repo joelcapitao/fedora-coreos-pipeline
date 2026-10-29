@@ -16,6 +16,7 @@ streams:
   testing-devel:
     type: development
     default: true
+    build_in_konflux: true
     konflux_application: fedora-coreos-testing-devel
   next-devel:         # do not touch; line managed by `next-devel/manage.py`
     type: development # do not touch; line managed by `next-devel/manage.py`
@@ -33,10 +34,10 @@ source_config:
   url: https://github.com/coreos/fedora-coreos-config
 
 s3:
-  bucket: fcos-builds
+  bucket: test-fcos-builds
   # see bucket layout in https://github.com/coreos/fedora-coreos-tracker/issues/189
-  builds_key: "prod/streams/${STREAM}"
-  oci_sigs_key: "prod/signatures/oci"
+  builds_key: "devel/streams/${STREAM}"
+  oci_sigs_key: "devel/signatures/oci"
   # just upload as public-read for now, but see discussions in
   # https://github.com/coreos/fedora-coreos-tracker/issues/189
   acl: public-read
@@ -137,3 +138,6 @@ konflux:
   api_url: https://api.kflux-fedora-01.84db.p1.openshiftapps.com:6443
   namespace: coreos-tenant
   token_credential: konflux-bot-0
+
+hotfix:
+  name: test-trigger-konflux-build

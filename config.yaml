@@ -27,10 +27,11 @@ streams:
   # branched:
   #   type: development
 
-additional_arches: [aarch64, ppc64le, s390x]
+additional_arches: [ppc64le]
 
 source_config:
-  url: https://github.com/coreos/fedora-coreos-config
+  url: https://github.com/joelcapitao/fedora-coreos-config
+  source_config_ref: unpin-kernel
 
 s3:
   bucket: fcos-builds

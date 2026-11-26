@@ -282,6 +282,19 @@ lock(resource: "build-${params.STREAM}") {
         }
 
         if (build_in_konflux) {
+            // Like `cosa build ostree`, compute the build ID upfront and
+            // skip the Konflux build and import if it already exists.
+            def konflux_build_exists = false
+            def versionary_build_id = ""
+            if (should_use_versionary()) {
+                def container_file = stream_info.get('container_file') ? "--file ${stream_info.get('container_file')}" : ""
+                versionary_build_id = shwrapCapture("cosa build --compute-version-only --versionary ${container_file}")
+                if (utils.pathExists("builds/${versionary_build_id}/${basearch}")) {
+                    echo "Build ${versionary_build_id} (${basearch}) already exists; skipping Konflux build and import"
+                    konflux_build_exists = true
+                }
+            }
+
             // Check for existing Konflux snapshot or trigger a new build
             stage('Build in Konflux') {
                 def component_name = stream_info.konflux_application
@@ -298,6 +311,8 @@ lock(resource: "build-${params.STREAM}") {
                     echo "Skipping Konflux build - using existing snapshot: ${existing_snapshot.name}"
                     konflux_snapshot = existing_snapshot.name
                     konflux_oci_image = existing_snapshot.container_image
+                } else if (konflux_build_exists) {
+                    echo "WARNING: No validated Konflux snapshot found for existing build ${versionary_build_id}"
                 } else {
                     // No existing snapshot - trigger a new build
                     echo "No existing snapshot found. Triggering Konflux build for component: ${component_name}"
@@ -325,13 +340,15 @@ lock(resource: "build-${params.STREAM}") {
                 echo "Konflux build completed. Snapshot: ${konflux_snapshot}, Container image: ${konflux_oci_image}, Commit: ${src_config_commit}"
             }
 
-            stage("Import Konflux image") {
-                def result = pipeutils.import_konflux_oci_image(
-                    oci_image: konflux_oci_image,
-                    konflux_config: konflux,
-                    parent_arg: parent_arg,
-                    stream: params.STREAM
-                )
+            if (!konflux_build_exists) {
+                stage("Import Konflux image") {
+                    def result = pipeutils.import_konflux_oci_image(
+                        oci_image: konflux_oci_image,
+                        konflux_config: konflux,
+                        parent_arg: parent_arg,
+                        stream: params.STREAM
+                    )
+                }
             }
         } else {
             // fetch from repos for the current build
